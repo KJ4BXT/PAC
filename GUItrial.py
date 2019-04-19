@@ -1,5 +1,6 @@
 from tkinter import *
 
+
 root = Tk()
 
 global enteredtext
@@ -15,6 +16,9 @@ def keyentered(event):
 
 texttry = Text(root, height = 4, width = 60)
 texttry.grid(row = 0, columnspan=10)
+
+L = label(root,text="Thank you for chosing PAC as your Primer Audio Controller")
+L.pack()
 
 f1 = Frame(root)
 f1.grid(row=1, sticky="nsew")
