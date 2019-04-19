@@ -1,0 +1,5 @@
+#https://opensourceforu.com/2017/07/introduction-raspberry-pi-gpio-programming-using-python/
+
+#Standard for this project will be pull up resistors for binary inputs (buttons)
+
+GPIO.add_event_detect(channel, event, callback = my_callback, bouncetime = timeinmilliseconds)
