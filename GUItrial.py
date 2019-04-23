@@ -1,5 +1,15 @@
 from tkinter import *
+import RPi.GPIO as GPIO
 
+GPIO.setmode(GPIO.BCM)
+GPIO,setup(10, GPIO.OUT)
+GPIO.output(10, GPIO.LOW)
+
+def toggle():
+	if GPIO.input(10):
+		GPIO.output(10, GPIO.LOW)
+		toggleButton["text"] = "Adjust values for Gain"
+		
 
 root = Tk()
 
