@@ -220,7 +220,7 @@ ReadThread.start()
 
 def run():
 	while True:
-		if len(controls) > 20:
+		if len(controls) > 20: # Placeholder exception?
 			print("too many control values added, exiting")
 			raise RuntimeError
 			

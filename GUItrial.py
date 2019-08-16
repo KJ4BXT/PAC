@@ -1,9 +1,19 @@
 from tkinter import *
-import RPi.GPIO as GPIO
+from control_class import DSP
 
-GPIO.setmode(GPIO.BCM)
-GPIO,setup(10, GPIO.OUT)
-GPIO.output(10, GPIO.LOW)
+try:
+	import RPi.GPIO as GPIO
+
+	GPIO.setmode(GPIO.BCM)
+	GPIO,setup(10, GPIO.OUT)
+	GPIO.output(10, GPIO.LOW)
+except Exception:
+	print("GPIO library could not be loaded!")
+	class GPIO:
+		def input(self, value):
+			print("pin ",value,"set as input")
+		def output(self, value1, value2):
+			print("pin ",value,"set as output",value2)
 
 def toggle():
 	if GPIO.input(10):
@@ -27,8 +37,8 @@ def keyentered(event):
 texttry = Text(root, height = 4, width = 60)
 texttry.grid(row = 0, columnspan=10)
 
-L = label(root,text="Thank you for chosing PAC as your Primer Audio Controller")
-L.pack()
+L = Label(root,text="Thank you for chosing PAC")
+#L.pack()
 
 f1 = Frame(root)
 f1.grid(row=1, sticky="nsew")
