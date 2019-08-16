@@ -3,6 +3,11 @@ NUM_INPUTS = 4
 NUM_OUTPUTS = 0
 NUM_CONTROLS = 20
 
+# The function that writes to the DSP should probably be threaded
+# so it doesn't interfere with the GUI, but otherwise parallelism
+# should be kept to a minimum so writes to the DSP are serialized 
+# properly. (Yes, that's kind of awful to say)
+
 class DSP:
 
 	class I():
@@ -40,12 +45,14 @@ class DSP:
 			self._callbacks.append(callback)
 
 		def queue(self, old_value, new_value):
+			"""This will be the function to"""
 			print("#"*40)
 			print("#  ",old_value,"   ",new_value,"   #")
 			print("#"*40)
 
 
 	def __init__(self, initial_value=0):
+		"""Creates input and output objects"""
 		self._output = []
 		self._input = []
 		self._callbacks = [self.queue]
