@@ -4,6 +4,8 @@
 # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 # Please try to generally adhere to PEP8 coding standards.
 # Tkinter imports may be an exception
+# Callback example: 
+# https://stackoverflow.com/questions/51885246/callback-on-variable-change-in-python
 
 #Imports
 '''
@@ -26,14 +28,14 @@ NUM_CONTROLS = 20
 controls = [0]*NUM_CONTROLS
 
 def db_to_float(number):
-	"""Converts """
+	"""Converts dB to float values"""
 	return(10**(number/20))
 
 
 def float_to_db(number):
-	if ((number > 1) or (number < 0)):
-		print("value must be between 0 and 1 to convert to dB. Got ", number)
-		raise(ValueError)
+	# if ((number > 1) or (number < 0)):
+		# print("value must be between 0 and 1 to convert to dB. Got ", number)
+		# raise(ValueError)
 	return(20*log10(number))
 
 # Need to figure out how / where to put DSP update hooks
@@ -92,7 +94,8 @@ class DSP():
 # This means that we can use 3 4 channel ADC's
 
 # Binary inputs (toggle switches, buttons, etc.)
-# should be set up using interrupts
+# should be set up using interrupts. 
+# Need to ensure that interrupts do not interfere with writes in progress
 
 def read_control(control):
 	global controls
@@ -101,7 +104,7 @@ def read_control(control):
 	mux_1 = control % 2
 	mux_2 = control % 1
 	
-	result = 
+	result = 0 # TODO
 
 def read_all():
 	for i in range(len(controls)):
