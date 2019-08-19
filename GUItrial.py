@@ -1,5 +1,7 @@
 from tkinter import *
+from tkinter import ttk
 from control_class import DSP
+from functools import partial
 
 try:
 	import RPi.GPIO as GPIO
@@ -21,78 +23,88 @@ def toggle():
 		toggleButton["text"] = "Adjust values for Gain"
 		
 
+# Keyboard reference:
+# https://www.daniweb.com/programming/software-development/threads/300867/on-screen-keyboards-in-tkinter#
+
+def click(btn):
+	"""Enters the selected button character in the text entry field.
+	Still need to add backspace (TODO)"""
+	s = "Button %s clicked" % btn
+	E1.insert(INSERT, btn)
+	root.title(s)
+
 root = Tk()
+root['bg'] = 'black'
 
-global enteredtext
-global texttry
-
-enteredtext = " ";
-def keyentered(event):
-	#texttry [:-1] = 1
-	print (texttry)
-	print(enteredtext)
-	#enteredtext = text
-	#return(enteredtext)
-
-texttry = Text(root, height = 4, width = 60)
-texttry.grid(row = 0, columnspan=10)
-
-L = Label(root,text="Thank you for chosing PAC")
-#L.pack()
-
-f1 = Frame(root)
-f1.grid(row=1, sticky="nsew")
-
-q = Button(f1, text = "q")
-q.bind('<Button-1>',keyentered)
-q.grid(row = 1, column=1,sticky="ew")
-
-w = Button(f1, text = "w")
-w.bind('<Button-1>',keyentered)
-w.grid(row= 1, column=2,sticky="ew")
-
-e = Button(f1, text = "e")
-e.bind('<Button-1>',keyentered)
-e.grid(row= 1, column=3,sticky="ew")
-
-r = Button(f1, text = "r")
-r.bind('<Button-1>',keyentered)
-r.grid(row= 1, column=4,sticky="ew")
-
-t = Button(f1, text = "t")
-t.bind('<Button-1>',keyentered)
-t.grid(row= 1, column=5,sticky="ew")
-
-y = Button(f1, text = "y")
-y.bind('<Button-1>',keyentered)
-y.grid(row= 1, column=6,sticky="ew")
-
-u = Button(f1, text = "u")
-u.bind('<Button-1>',keyentered)
-u.grid(row= 1, column=7,sticky="ew")
-
-i = Button(f1, text = "i")
-i.bind('<Button-1>',keyentered)
-i.grid(row= 1, column=8,sticky="ew")
-
-o = Button(f1, text = "o")
-o.bind('<Button-1>',keyentered)
-o.grid(row= 1, column=9,sticky="ew")
-
-p = Button(f1, text = "p")
-p.bind('<Button-1>',keyentered)
-p.grid(row= 1, column=10,sticky="ew")
+Lframe = Frame(root, bd=3,bg='black')
+Lframe.pack(side='left')
+Cframe = Frame(root, bd=3)
+Cframe.pack(side='left', expand = True, fill=BOTH)
+Rframe = Frame(root, bd=3, bg='black')
+Rframe.pack(side='left', expand = True, fill=BOTH)
 
 
-#Row 2 creation
-r2vals = "asdfghjkl;\""
-r2buttons = []
+topframe = LabelFrame(Cframe, text = " Menu buttons ", bd=3)
+topframe.pack(padx=15, pady=10)
 
-for i in r2vals:
-	r2buttons.append(Button(f1, text=i))
+midframe = LabelFrame(Cframe, text = " Code entry ", bd=3)
+midframe.pack(padx=15, pady=10)
 
-for i in range(len(r2buttons)):
-	r2buttons[i].bind(r2buttons[i], keyentered)
-	r2buttons[i].grid(row=2,column=i,sticky="ew")
+
+prev_button = ttk.Button(topframe, text= "Home")
+prev_button.pack(padx=10,side='left')
+save_button = ttk.Button(topframe, text= "Save")
+save_button.pack(padx=10,side='left')
+
+
+E1 = Text(midframe)
+E1.pack(fill=BOTH, expand = True)
+
+# Sample equation 
+E1.insert(INSERT, """text""")
+
+# create a labeled frame for the keypad buttons
+# relief='groove' and labelanchor='nw' are default
+bottomframe = LabelFrame(Cframe, text=" keypad ", bd=3)
+bottomframe.pack(padx=15, pady=10)
+# typical calculator button layout
+btn_list = [
+['+', '-', '*', '/', '^', '%', '(', ')', '='],
+['1',  '2',  '3',  '4',  '5', '6', '7', '8', '9', '0', '-', '+'],
+['Q',  'W',  'E',  'R',  'T', 'Y', 'U', 'I', 'O', 'P', '[', ']'],
+['A',  'S',  'D',  'F',  'G', 'H', 'J', 'K', 'L', ';', '"'],
+['Z',  'X',  'C',  'V',  'B', 'N', 'M', ',', '.', '/' ]]
+
+n = 0 # loop counter variable
+
+btn = list(range(sum(map(len,btn_list))))
+for sub in btn_list:
+	for label in sub:
+		# partial takes care of function and argument
+		cmd = partial(click, label)
+		# create the button
+		btn[n] = ttk.Button(bottomframe, text=label, width=5, command=cmd)
+		# position the button
+		btn[n].grid(row=btn_list.index(sub), column=sub.index(label))
+		# increment button index
+		n += 1
+
+
+# I/O buttons
+
+inbuttons = []
+outbuttons = []
+
+for i in DSP.input:
+	cmd = partial(click, 
+	inbuttons.append(ttk.Button(Lframe, text='\n'+i.name+'\n'))
+	inbuttons[-1].pack(padx = 5, pady=10, fill=BOTH)#, expand=True)
+for o in DSP.output:
+	outbuttons.append(ttk.Button(Rframe, text=o.name))
+	outbuttons[-1].pack(padx = 5, pady=10, fill=BOTH, expand=True)
+
+
+
+
 
 root.mainloop()
