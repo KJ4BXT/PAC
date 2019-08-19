@@ -138,9 +138,11 @@ class DSP():
 		self.output = []
 		for i in range(NUM_INPUTS):
 			self.input.append(self.I())
+			self.input[i].id = 'DSP.input['+str(i)+']'
 			self.input[i].name = 'input '+str(i)
 		for o in range(NUM_OUTPUTS):
 			self.output.append(self.O())
+			self.output[o].id = 'DSP.output['+str(o)+']'
 			self.output[o].name = 'output '+str(o)
 
 
