@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 from control_class import DSP
 from functools import partial
 
@@ -21,7 +22,12 @@ def toggle():
 	if GPIO.input(10):
 		GPIO.output(10, GPIO.LOW)
 		toggleButton["text"] = "Adjust values for Gain"
-		
+
+def info_msg(info):
+	messagebox.showwarning(info)
+
+def unfinished(holder=''):
+	messagebox.showwarning("TODO","this has not yet been programmed") 
 
 # Keyboard reference:
 # https://www.daniweb.com/programming/software-development/threads/300867/on-screen-keyboards-in-tkinter#
@@ -35,13 +41,15 @@ def click(btn):
 
 root = Tk()
 root['bg'] = 'black'
+root.geometry('800x480')
+#root.attributes('-fullscreen',True) # Uncomment when moved to rpi
 
 Lframe = Frame(root, bd=3,bg='black')
 Lframe.pack(side='left')
 Cframe = Frame(root, bd=3)
 Cframe.pack(side='left', expand = True, fill=BOTH)
 Rframe = Frame(root, bd=3, bg='black')
-Rframe.pack(side='left', expand = True, fill=BOTH)
+Rframe.pack(side='left', fill=BOTH)
 
 
 topframe = LabelFrame(Cframe, text = " Menu buttons ", bd=3)
@@ -51,20 +59,18 @@ midframe = LabelFrame(Cframe, text = " Code entry ", bd=3)
 midframe.pack(padx=15, pady=10)
 
 
-prev_button = ttk.Button(topframe, text= "Home")
+prev_button = ttk.Button(topframe, text= "Home", command=unfinished)
 prev_button.pack(padx=10,side='left')
-save_button = ttk.Button(topframe, text= "Save")
+save_button = ttk.Button(topframe, text= "Save", command=unfinished)
 save_button.pack(padx=10,side='left')
 
 
-E1 = Text(midframe)
+E1 = Text(midframe,wrap=NONE, height = 12, width = 64)
 E1.pack(fill=BOTH, expand = True)
 
 # Sample equation 
-E1.insert(INSERT, """text""")
+E1.insert(INSERT, """#Click buttons!\nDSP.output[1].mute = control.button3""")
 
-# create a labeled frame for the keypad buttons
-# relief='groove' and labelanchor='nw' are default
 bottomframe = LabelFrame(Cframe, text=" keypad ", bd=3)
 bottomframe.pack(padx=15, pady=10)
 # typical calculator button layout
@@ -96,15 +102,13 @@ inbuttons = []
 outbuttons = []
 
 for i in DSP.input:
-	cmd = partial(click, 
-	inbuttons.append(ttk.Button(Lframe, text='\n'+i.name+'\n'))
-	inbuttons[-1].pack(padx = 5, pady=10, fill=BOTH)#, expand=True)
+	cmd = partial(click, i.id)
+	inbuttons.append(ttk.Button(Lframe, text='\n'+i.name+'\n', command=cmd))
+	inbuttons[-1].pack(padx = 5, pady=4, fill=BOTH)#, expand=True)
 for o in DSP.output:
-	outbuttons.append(ttk.Button(Rframe, text=o.name))
-	outbuttons[-1].pack(padx = 5, pady=10, fill=BOTH, expand=True)
-
-
-
+	cmd = partial(click, o.id)
+	outbuttons.append(ttk.Button(Rframe, text='\n'+o.name+'\n', command=cmd))
+	outbuttons[-1].pack(padx = 5, pady=4, fill=BOTH)#, expand=True)
 
 
 root.mainloop()
