@@ -31,7 +31,7 @@ disp.display()
 # Make sure to create image with mode '1' for 1-bit color.
 image = Image.new('1', (width, height))
 
-# Load default font.
+
 if z <100 and z>9:
     font = ImageFont.truetype("Calibri.ttf", 88)
 if z >= 0 and z < 10:
