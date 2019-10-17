@@ -110,7 +110,7 @@ x = 0
 
 
 # Load Calibri font with varying size
-font = ImageFont.truetype("Calibri.ttf",autosizetext(textlist));
+font = ImageFont.truetype("Calibri.ttf",autosizetext(textlist)); #need to download calibri font so use this link: https://www.fontpalace.com/font-details/Calibri/
 
 # Alternatively load a TTF font.  Make sure the .ttf font file is in the same directory as the python script!
 # Some other nice fonts to try: http://www.dafont.com/bitmap.php
@@ -169,8 +169,8 @@ def dispchoose(dispnum, text2disp)
         draw.text((x, top+13),y[1],  font= x, fill=255) 
         draw.text((x, top+25),y[2],  font= x, fill=255)
         draw.text((x, top+37),y[3],  font= x, fill=255)   
-    disp.image(image)
-    disp.display()
+    disp.image(image) #"draw" the text
+    disp.display() #display the text
    # if dnum == 0
    #     TCA_ADDR = 0x70;
    # elif dnum == 1:
