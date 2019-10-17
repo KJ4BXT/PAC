@@ -22,6 +22,7 @@ import time
 import smbus2
 import board
 import busio
+import math
 import adafruit_tca9548a
 
 import Adafruit_GPIO.SPI as SPI
@@ -108,8 +109,8 @@ bottom = height-padding
 x = 0
 
 
-# Load default font.
-font = ImageFont.load_default()
+# Load Calibri font with varying size
+font = ImageFont.truetype("Calibri.ttf",autosizetext(textlist));
 
 # Alternatively load a TTF font.  Make sure the .ttf font file is in the same directory as the python script!
 # Some other nice fonts to try: http://www.dafont.com/bitmap.php
@@ -121,22 +122,22 @@ while True:
     draw.rectangle((0,0,width,height), outline=0, fill=0)
 
     # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
-    cmd = "hostname -I | cut -d\' \' -f1"
-    IP = subprocess.check_output(cmd, shell = True )
-    cmd = "top -bn1 | grep load | awk '{printf \"CPU Load: %.2f\", $(NF-2)}'"
-    CPU = subprocess.check_output(cmd, shell = True )
-    cmd = "free -m | awk 'NR==2{printf \"Mem: %s/%sMB %.2f%%\", $3,$2,$3*100/$2 }'"
-    MemUsage = subprocess.check_output(cmd, shell = True )
-    cmd = "df -h | awk '$NF==\"/\"{printf \"Disk: %d/%dGB %s\", $3,$2,$5}'"
-    Disk = subprocess.check_output(cmd, shell = True )
+   #cmd = "hostname -I | cut -d\' \' -f1"
+   # IP = subprocess.check_output(cmd, shell = True )
+   # cmd = "top -bn1 | grep load | awk '{printf \"CPU Load: %.2f\", $(NF-2)}'"
+   # CPU = subprocess.check_output(cmd, shell = True )
+   # cmd = "free -m | awk 'NR==2{printf \"Mem: %s/%sMB %.2f%%\", $3,$2,$3*100/$2 }'"
+   # MemUsage = subprocess.check_output(cmd, shell = True )
+   # cmd = "df -h | awk '$NF==\"/\"{printf \"Disk: %d/%dGB %s\", $3,$2,$5}'"
+   # Disk = subprocess.check_output(cmd, shell = True )
 
     # Write two lines of text.
 
-    draw.text((x, top),       "IP: " + str(IP.decode()),  font=font, fill=255)
-    draw.text((x, top+8),     str(CPU.decode()), font=font, fill=255)
-    if TCA_PORT_DISPLAY1:
-        draw.text((x, top+16),    str(MemUsage.decode()),  font=font, fill=255)
-        draw.text((x, top+25),    str(Disk.decode()),  font=font, fill=255)
+    draw.text((x, top+1),       ,  font=font, fill=255)
+    draw.text((x, top+1+fontsize),     , font=font, fill=255)
+   # if TCA_PORT_DISPLAY1:
+        #draw.text((x, top+16),    str(MemUsage.decode()),  font=font, fill=255)
+        #draw.text((x, top+25),    str(Disk.decode()),  font=font, fill=255)
 
     # Display image.
     disp.image(image)
@@ -144,4 +145,58 @@ while True:
 #    time.sleep(.25)
     TCA_PORT_DISPLAY1 = int(not TCA_PORT_DISPLAY1) #mux port
     disp = Adafruit_SSD1306.SSD1306_128_64(mux_select(bus,TCA_PORT_DISPLAY1))#,rst=RST)
+
+
+#function to read list of messages and choose which OLED to display on using the display's number (dispnum) and the text to disp (text2disp)
+ 
+def dispchoose(dispnum, text2disp)
+    TCA_ADDR = 0x70 + hex(math.floor(dispnum/8)) #divide the display number by 8 to find which mux chip it is addressed to
+    TCA_PORT_DISPLAY1 = dispnum%8 #use modulus of dispnum by 8 to determine the port number on the mux chip given by dnum.
+    x,y = autosizetext(text2disp)
+    numrows = len(y)
+    draw.rectangle((0,0,width,height), outline=0, fill=0)
+    if numrows == 1 # text can display on one row so display it using only one row
+        draw.text((x, top+1),y[0],  font= x, fill=255)
+    elif numrows == 2# need to display on two rows so write the text in two rows
+        draw.text((x, top+1),y[0],  font= x, fill=255)
+        draw.text((x, top+1+12),y[1],  font= x, fill=255)
+    elif numrows == 3 # need to display on three rows so write the text in three rows
+        draw.text((x, top+1),y[0],  font= x, fill=255)
+        draw.text((x, top+13),y[1],  font= x, fill=255)    
+        draw.text((x, top+25),y[2],  font= x, fill=255)
+    elif numrows == 4 # need to display on four rows so write the text in four rows
+        draw.text((x, top+1),y[0],  font= x, fill=255)
+        draw.text((x, top+13),y[1],  font= x, fill=255) 
+        draw.text((x, top+25),y[2],  font= x, fill=255)
+        draw.text((x, top+37),y[3],  font= x, fill=255)   
+    disp.image(image)
+    disp.display()
+   # if dnum == 0
+   #     TCA_ADDR = 0x70;
+   # elif dnum == 1:
+   #     TCA_ADDR = 0x71;
+   # elif dnum == 2:
+   #     TCA_ADDR = 0x72;
+   # return(TCA_ADDR, TCA_PORT_DISPLAY1); # return the hex address and port for the OLED display to use. May be needed or may call autosizetext function here.
+
+def autosizetext(text) # need to change to allow for space/null characters in text string and to scroll text. Also need to consider if multi-line text has < 17 characters on its following lines.
+#    textlen = len(text);
+    for i in text:
+        textlen = len(text[i]); #determine how many characters are in the message
+        fontsize = {1:76, 2:76, 3:63, 4:47, 5:41, 6:36, 7:30, 8:27, 9:23, 10:21, 11:19, 12:17,13:15, 14:15, 15:14, 16:13, 17:12} #dictionary to help set the font size
+        if textlen <= 17: # check if text will fit on one line on the OLED.
+            font = ImageFont.truetype("Calibri.ttf",fontsize[textlen]); #if it does set font size appropriately using Calibri.
+            textl = text #the text fits on one row so no need to reformat
+        elif textlen > 17:
+            numlines = math.ceiling(textlen/17); #check how many lines are needed
+            font = ImageFont.truetype("Calibri.ttf",fontsize[17]) #set font size 12
+            if numlines == 2: # 2 lines are needed to display text
+                textl = [text[0:16],text[17:34]] #create text list of two rows
+            elif numlines == 3:
+                textl = [text[0:16],text[17:34],text[35:52]] #text list of three rows
+            elsif numlines == 4:
+                textl = [text[0:16],text[17:34],text[35:52],text[53:70]] # text list of four rows
+
+
+    return(font,textl);            
 
