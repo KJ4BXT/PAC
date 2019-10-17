@@ -11,6 +11,7 @@
 '''
 import board
 import busio
+import RPi.GPIO as GPIO
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 '''
@@ -24,10 +25,21 @@ NUM_INPUTS = 4
 NUM_OUTPUTS = 8
 NUM_CONTROLS = 20
 
-# Might want to move this to a dictionary for easier referencing
-controls = [0]*NUM_CONTROLS
+#Pin definitions
+button0 = -1
+button1 = -1
+button2 = -1
+button3 = -1
+
+button = [0, 0, 0, 0] # button list
+slider = [0, 0, 0, 0] # Faders
+pot = [0, 0] # Potentiometers
+rotary = [0, 0] # rotary encoders
 
 commands = [] # This is the global variable to store the command queue
+
+for btn in [button0, button1, button2, button3]:
+	GPIO.add_event_detect(btn, GPIO.BOTH, callback=btn_ISR, bouncetime=250)
 
 def db_to_float(number):
 	"""Converts dB to float values"""
@@ -202,12 +214,20 @@ DSP = DSP()
 # should be set up using interrupts. 
 # Need to ensure that interrupts do not interfere with writes in progress
 
+def btn_ISR(pin): # Triggered on rising and falling
+	stat = GPIO.input(pin)
+	if (pin == button0):
+		button[0] = stat
+	elif(pin == button1):
+		button[1] = stat
+	elif (pin == button2):
+		button[2] = stat
+	elif (pin == button3):
+		button[3] = stat
+
 def read_control(control):
 	global controls
-	#Change to pinout control (sets analog control to read)
-	mux_0 = control % 4
-	mux_1 = control % 2
-	mux_2 = control % 1
+
 	
 	result = 0 # TODO
 
