@@ -7,10 +7,10 @@ from functools import partial
 
 try:
 	import RPi.GPIO as GPIO
-        #import gpiozero as GPIO
-	#GPIO.setmode(GPIO.BCM)
-	#GPIO.setup(10, GPIO.OUT)
-	#GPIO.output(10, GPIO.LOW)
+    
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setup(10, GPIO.OUT)
+	GPIO.output(10, GPIO.LOW)
 except Exception:
 	print("GPIO library could not be loaded!")
 	class GPIO:
