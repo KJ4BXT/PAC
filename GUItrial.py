@@ -4,12 +4,13 @@ from tkinter import messagebox
 from control_class import DSP
 from functools import partial
 
+
 try:
 	import RPi.GPIO as GPIO
-
-	GPIO.setmode(GPIO.BCM)
-	GPIO.setup(10, GPIO.OUT)
-	GPIO.output(10, GPIO.LOW)
+        #import gpiozero as GPIO
+	#GPIO.setmode(GPIO.BCM)
+	#GPIO.setup(10, GPIO.OUT)
+	#GPIO.output(10, GPIO.LOW)
 except Exception:
 	print("GPIO library could not be loaded!")
 	class GPIO:

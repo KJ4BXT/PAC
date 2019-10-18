@@ -38,8 +38,8 @@ rotary = [0, 0] # rotary encoders
 
 commands = [] # This is the global variable to store the command queue
 
-for btn in [button0, button1, button2, button3]:
-	GPIO.add_event_detect(btn, GPIO.BOTH, callback=btn_ISR, bouncetime=250)
+#for btn in [button0, button1, button2, button3]:
+#	GPIO.add_event_detect(btn, GPIO.BOTH, callback=btn_ISR, bouncetime=250)
 
 def db_to_float(number):
 	"""Converts dB to float values"""
@@ -213,7 +213,7 @@ DSP = DSP()
 # Binary inputs (toggle switches, buttons, etc.)
 # should be set up using interrupts. 
 # Need to ensure that interrupts do not interfere with writes in progress
-
+'''
 def btn_ISR(pin): # Triggered on rising and falling
 	stat = GPIO.input(pin)
 	if (pin == button0):
@@ -224,7 +224,7 @@ def btn_ISR(pin): # Triggered on rising and falling
 		button[2] = stat
 	elif (pin == button3):
 		button[3] = stat
-
+'''
 def read_control(control):
 	global controls
 
