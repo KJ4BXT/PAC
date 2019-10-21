@@ -58,6 +58,7 @@ class DSP():
 	class I(): # Input object
 		def __init__(self):
 			self.name = 'placeholder'
+			self.index = -1
 			self.gain = 0
 			self.mute = True
 			self.vol = self.gain*self.mute # TODO check that this gets updated
@@ -82,6 +83,7 @@ class DSP():
 	class O(): # Output object
 		def __init__(self):
 			self.name = 'placeholder'
+			self.id = -1
 			self.delay = 0
 			self.gain = 0
 			self.mute = True
@@ -131,6 +133,9 @@ class DSP():
 
 		def set_mute(self, status):
 			#print(self, 'set mute to ',status)
+			bus.write_i2c_block_data(ADDR,0x00,[hex(0x1E+(self.index*3)),0X00, 0X00, 0X00, 0X00])
+			bus.write_i2c_block_data(ADDR,0x00,[0x1D,0x00, 0x00,0x20,0x8A])
+
 			queue(status) # TODO proper format
 
 		def set_gain(self, gain):
@@ -150,9 +155,11 @@ class DSP():
 		self.output = []
 		for i in range(NUM_INPUTS):
 			self.input.append(self.I())
+			self.index = i
 			self.input[i].id = 'DSP.input['+str(i)+']'
 			self.input[i].name = 'input '+str(i)
 		for o in range(NUM_OUTPUTS):
+			self.index = o
 			self.output.append(self.O())
 			self.output[o].id = 'DSP.output['+str(o)+']'
 			self.output[o].name = 'output '+str(o)
