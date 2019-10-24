@@ -20,6 +20,11 @@ from math import acos, asin, atan, atan2, ceil, cos, degrees, e, exp, floor
 from math import gcd, log, log10, pow, sqrt, sin, tan, radians, pi, tau
 from datetime import datetime
 from threading import Thread
+import smbus
+
+bus = smbus.SMBus(1)
+
+ADDR = 0x3B #DSP addresss
 
 NUM_INPUTS = 4
 NUM_OUTPUTS = 8
@@ -58,7 +63,7 @@ class DSP():
 	class I(): # Input object
 		def __init__(self):
 			self.name = 'placeholder'
-			self.index = -1
+			self.ind = -1 # Short for index
 			self.gain = 0
 			self.mute = True
 			self.vol = self.gain*self.mute # TODO check that this gets updated
@@ -73,17 +78,18 @@ class DSP():
 			super().__setattr__(name, value)			
 		
 		def set_mute(self, status):
-			#print(self, 'set mute to ',status)
-			queue(status) # TODO proper format
+			print(self, 'set mute to ',status)
+			# queue(status) # TODO proper format
 
 		def set_gain(self, gain):
-			#print(self, 'set mute to ',gain)
-			queue(gain) # TODO proper format
+			print(self, 'set mute to ',gain)
+			#queue(gain) # TODO proper format
 
 	class O(): # Output object
 		def __init__(self):
 			self.name = 'placeholder'
 			self.id = -1
+			self.ind = -1
 			self.delay = 0
 			self.gain = 0
 			self.mute = True
@@ -113,40 +119,51 @@ class DSP():
 
 		def set_HPF(self, freq):
 			if freq:				
-				#print(self, 'set HPF to ',freq,'Hz')
-				queue(freq) # TODO proper format
+				print(self, 'set HPF to ',freq,'Hz')
+				#queue(freq) # TODO proper format
 			else:
-				#print('HPF bypass')
-				queue('HPF bypass') # TODO proper format
+				print('HPF bypass')
+				#queue('HPF bypass') # TODO proper format
 
 		def set_LPF(self, freq):
 			if freq:				
-				#print(self, 'set LPF to ',freq,'Hz')
-				queue(freq) # TODO proper format
+				print(self, 'set LPF to ',freq,'Hz')
+				#queue(freq) # TODO proper format
 			else:
-				#print('LPF bypass')
-				queue('LPF bypass') # TODO proper format
+				print('LPF bypass')
+				#queue('LPF bypass') # TODO proper format
 
 		def set_delay(self, delay):
 			#print(self, 'set delay to ',delay)
-			queue(delay) # TODO proper format
+			val = 0
+			if (delay < 0):
+					delay = 0
+			if (delay > 80):
+					delay = 80
+
+			val = int(delay*48) # Convert to right value range for hex conversion
+			# print('int: ',val)
+			val = "{0:#0{1}x}".format(val,6) #
+			# print("hex: ",val)
+			val = val[2:] #strip 0x prefix
+			cmd = [int(val[:2],16),int(val[2:4],16)]
+			print('set delay',val)
+			queue([ADDR,0x04,[int(0xC4+self.ind),0x00,0x00]+cmd]) # TODO proper format
 
 		def set_mute(self, status):
 			#print(self, 'set mute to ',status)
-			bus.write_i2c_block_data(ADDR,0x00,[hex(0x1E+(self.index*3)),0X00, 0X00, 0X00, 0X00])
-			bus.write_i2c_block_data(ADDR,0x00,[0x1D,0x00, 0x00,0x20,0x8A])
-
-			queue(status) # TODO proper format
+			queue([ADDR,0x00,[int(hex(0x1E+(self.ind*3)),16),0X00, 0X00, 0X00, 0X00]])
+			queue([ADDR,0x00,[0x1D,0x00, 0x00,0x20,0x8A]])
 
 		def set_gain(self, gain):
-			#print(self, 'set gain to ',gain)
-			queue(gain) # TODO proper format
+			print(self, 'set gain to ',gain)
+			#queue(gain) # TODO proper format
 
 		def set_sources(self, sources):
 			"""Note, the entire list must be updated at once for the setattr
 			to trigger. """
-			#print(self, 'set sources to ',sources)
-			queue(sources) # TODO proper format
+			print(self, 'set sources to ',sources)
+			#queue(sources) # TODO proper format
 
 
 	def __init__(self):
@@ -155,12 +172,12 @@ class DSP():
 		self.output = []
 		for i in range(NUM_INPUTS):
 			self.input.append(self.I())
-			self.index = i
+			self.input[i].ind = i
 			self.input[i].id = 'DSP.input['+str(i)+']'
 			self.input[i].name = 'input '+str(i)
 		for o in range(NUM_OUTPUTS):
-			self.index = o
 			self.output.append(self.O())
+			self.output[o].ind = o
 			self.output[o].id = 'DSP.output['+str(o)+']'
 			self.output[o].name = 'output '+str(o)
 
@@ -176,6 +193,7 @@ class DSP():
 
 
 def queue(data):
+	print('queued ',data)
 	"""data should be a list, with the following format:
 	[i2c address, memory address, [data]]
 	data should be less than 32 bytes at a time.
@@ -185,14 +203,23 @@ def queue(data):
 	commands.append(data)
 
 def run_queue():
+	global commands
 	"""This function is to be run in a thread so I2C writes don't hang the
 	main program / GUI or interfere with each other. 
 	May need to compartmentalize to SPI and I2C"""
 	while True:
 		if commands:
-			# Smbus block write goes here TODO
-			print('queue: ',commands.pop(0))
-			sleep(0.1)
+			#print(commands.pop(0))
+			#print('cmd: ',cmd)
+			sleep(0.01)
+			X = commands.pop(0)
+			print('X',X)
+			try:
+				bus.write_i2c_block_data(X[0],X[1],X[2])
+			except Exception:
+				print("INVALID COMMAND!")
+			#print('commands pop: ',commands.pop(0))
+			sleep(0.01)
 
 queue_thread = Thread(target=run_queue, daemon=True)
 queue_thread.start()
@@ -203,8 +230,8 @@ def read_controls():
 		# Read ADC. TODO
 		sleep(1)
 
-read_control_thread = Thread(target=read_controls, daemon = True)
-read_control_thread.start()
+#read_control_thread = Thread(target=read_controls, daemon = True)
+#read_control_thread.start()
 
 # Yes this overwrites a class, no I don't care.
 # In fact I did it on purpose to reduce possibility of error.
@@ -232,7 +259,8 @@ def btn_ISR(pin): # Triggered on rising and falling
 	elif (pin == button3):
 		button[3] = stat
 '''
-def read_control(control):
+
+'''def read_control(control):
 	global controls
 
 	
@@ -258,3 +286,4 @@ def run():
 		###
 		# Section to execute user code
 		###
+'''
