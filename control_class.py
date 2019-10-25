@@ -20,9 +20,9 @@ from math import acos, asin, atan, atan2, ceil, cos, degrees, e, exp, floor
 from math import gcd, log, log10, pow, sqrt, sin, tan, radians, pi, tau
 from datetime import datetime
 from threading import Thread
-import smbus
+import smbus2
 
-bus = smbus.SMBus(1)
+bus = smbus2.SMBus(1)
 
 ADDR = 0x3B #DSP addresss
 
@@ -140,7 +140,6 @@ class DSP():
 					delay = 0
 			if (delay > 80):
 					delay = 80
-
 			val = int(delay*48) # Convert to right value range for hex conversion
 			# print('int: ',val)
 			val = "{0:#0{1}x}".format(val,6) #
@@ -159,10 +158,35 @@ class DSP():
 			print(self, 'set gain to ',gain)
 			#queue(gain) # TODO proper format
 
-		def set_sources(self, sources):
+
+
+		def set_sources(self, gain_vals):
 			"""Note, the entire list must be updated at once for the setattr
 			to trigger. """
-			print(self, 'set sources to ',sources)
+			val = 0 # variable initalization
+			for i in range(len(gain_vals)):
+				if gain_vals[i] != -1:#self.sources[i]: # Don't update if not needed
+					#converts to, and returns 4 hex values
+					# 0 is 0x00, 0x00, 0x00, 0x00, 0x00
+					# 1 is 0x00, 0x01, 0x00, 0x00, 0x00
+					# https://stackoverflow.com/questions/12638408/decorating-hex-function-to-pad-zeros
+					# Range limit:
+					val = gain_vals[i]
+					if (val < 0):
+							val = 0
+					elif (val > 10): # Arbitrary, may be changed
+							val = 10
+					val = int(val*16777216) # Convert to right value range for hex conversion
+					val = "{0:#0{1}x}".format(val,10) #
+					val = val[2:] #strip 0x prefix
+					ret = [int(val[:2],16),int(val[2:4],16),int(val[4:6],16),int(val[6:8],16)]
+					queue([ADDR,0x60,[0x00]+ret]) # value
+					print("index/address value: ")
+					print(str(0x8C+i+0x04*self.ind))
+					queue([ADDR,0x60,[0x05,0x00,0x00,0x01]+[0x8C+i+0x04*self.ind]+[0x00,0x00,0x00,0x01]]) # location
+
+			print(self, 'set sources to ',gain_vals)
+			print(commands)
 			#queue(sources) # TODO proper format
 
 
@@ -213,11 +237,14 @@ def run_queue():
 			#print('cmd: ',cmd)
 			sleep(0.01)
 			X = commands.pop(0)
-			print('X',X)
+			print('X: ',X)
+			
 			try:
 				bus.write_i2c_block_data(X[0],X[1],X[2])
-			except Exception:
+			except Exception as e:
 				print("INVALID COMMAND!")
+				print(e)
+#				print("Command: ",X)
 			#print('commands pop: ',commands.pop(0))
 			sleep(0.01)
 
