@@ -8,6 +8,13 @@
 # https://stackoverflow.com/questions/51885246/callback-on-variable-change-in-python
 
 #Imports
+'''
+import board
+import busio
+import RPi.GPIO as GPIO
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
+'''
 from time import sleep
 from math import acos, asin, atan, atan2, ceil, cos, degrees, e, exp, floor
 from math import gcd, log, log10, pow, sqrt, sin, tan, radians, pi, tau
@@ -21,25 +28,17 @@ from adafruit_ads1x15.analog_in import AnalogIn
 bus = smbus2.SMBus(1)
 i2c = busio.I2C(board.SCL, board.SDA)#, frequency=1000000)
 
-GPIO.setmode(GPIO.BCM)
-
 ADDR = 0x3B #DSP addresss
 
 NUM_INPUTS = 4
 NUM_OUTPUTS = 8
-NUM_CONTROLS = 20 # Can probably delete this line
+NUM_CONTROLS = 20
 
 #Pin definitions
-button0 = 15
-button1 = 18
-button2 = 23
-button3 = 24
-buttonmode = 'toggle' # alternative: 'momentary'
-
-led0 = 20
-led1 = 16
-led2 = 12
-led3 = 25
+button0 = -1
+button1 = -1
+button2 = -1
+button3 = -1
 
 button = [0, 0, 0, 0] # button list
 slider = [0, 0, 0, 0] # Faders
@@ -48,38 +47,8 @@ rotary = [0, 0] # rotary encoders
 
 commands = [] # This is the global variable to store the command queue
 
-# Binary inputs (toggle switches, buttons, etc.)
-# should be set up using interrupts. 
-# Need to ensure that interrupts do not interfere with writes in progress
-
-def btn_ISR(pin): # Triggered on rising and falling
-	if (buttonmode == 'momentary'):
-		stat = GPIO.input(pin)
-		if (pin == button0):
-			button[0] = stat
-		elif(pin == button1):
-			button[1] = stat
-		elif (pin == button2):
-			button[2] = stat
-		elif (pin == button3):
-			button[3] = stat
-	else: # toggle mode. May consider using elif
-		if (pin == button0):
-			button[0] = not button[0]
-		elif(pin == button1):
-			button[1] = not button[1]
-		elif (pin == button2):
-			button[2] = not button[2]
-		elif (pin == button3):
-			button[3] = not button[3]
-
-
-for btn in [button0, button1, button2, button3]:
-	GPIO.setup(btn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.add_event_detect(btn, GPIO.BOTH, callback=btn_ISR, bouncetime=250)
-
-for led in [led0, led1, led2, led3]:
-	GPIO.setup(led, GPIO.OUT)
+#for btn in [button0, button1, button2, button3]:
+#	GPIO.add_event_detect(btn, GPIO.BOTH, callback=btn_ISR, bouncetime=250)
 
 adc = [ADS.ADS1115(i2c,address=0x48),ADS.ADS1115(i2c,address=0x49),ADS.ADS1115(i2c,address=0x4A)]
 
@@ -316,6 +285,22 @@ def read_controls():
 # rotary potentiometers (4x)
 # Joystick (1x, 2 channels)
 # This means that we can use 3 4 channel ADC's
+
+# Binary inputs (toggle switches, buttons, etc.)
+# should be set up using interrupts. 
+# Need to ensure that interrupts do not interfere with writes in progress
+'''
+def btn_ISR(pin): # Triggered on rising and falling
+	stat = GPIO.input(pin)
+	if (pin == button0):
+		button[0] = stat
+	elif(pin == button1):
+		button[1] = stat
+	elif (pin == button2):
+		button[2] = stat
+	elif (pin == button3):
+		button[3] = stat
+'''
 
 ReadThread = Thread(target=read_controls)
 ReadThread.daemon = True
