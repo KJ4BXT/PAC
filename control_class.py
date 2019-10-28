@@ -20,9 +20,10 @@ from math import acos, asin, atan, atan2, ceil, cos, degrees, e, exp, floor
 from math import gcd, log, log10, pow, sqrt, sin, tan, radians, pi, tau
 from datetime import datetime
 from threading import Thread
-import smbus2
+import smbus2, busio
 
-bus = smbus2.SMBus(1)
+#bus = smbus2.SMBus(1)
+bus = busio.I2C(board.SCL, board.SDA)#, frequency=1000000)
 
 ADDR = 0x3B #DSP addresss
 
@@ -45,6 +46,14 @@ commands = [] # This is the global variable to store the command queue
 
 #for btn in [button0, button1, button2, button3]:
 #	GPIO.add_event_detect(btn, GPIO.BOTH, callback=btn_ISR, bouncetime=250)
+
+adc = [ADS.ADS1115(bus,address=0x48),ADS.ADS1115(bus,address=0x49),ADS.ADS1115(bus,address=0x4A)]
+analog = [0]*len(adc)
+for i in range(len(adc)): # single ended inputs
+		analog[i*4] = AnalogIn(adc[i], ADS.P0)
+		analog[i*4+1] = AnalogIn(adc[i], ADS.P1)
+		analog[i*4+2] = AnalogIn(adc[i], ADS.P2)
+		analog[i*4+3] = AnalogIn(adc[i], ADS.P3)
 
 def db_to_float(number):
 	"""Converts dB to float values"""
@@ -255,6 +264,8 @@ def read_controls():
 	"""Stub function to read physical control inputs"""
 	while True:
 		# Read ADC. TODO
+		for i in analog:
+			if (i
 		sleep(1)
 
 #read_control_thread = Thread(target=read_controls, daemon = True)
@@ -287,30 +298,6 @@ def btn_ISR(pin): # Triggered on rising and falling
 		button[3] = stat
 '''
 
-'''def read_control(control):
-	global controls
-
-	
-	result = 0 # TODO
-
-def read_all():
-	for i in range(len(controls)):
-		controls[i] = read_control(i)
-
-
-ReadThread = Thread(target=read_all)
+ReadThread = Thread(target=read_controls)
 ReadThread.daemon = True
 ReadThread.start()
-
-def run():
-	while True:
-		if len(controls) > 20: # Placeholder exception?
-			print("too many control values added, exiting")
-			raise RuntimeError
-			
-		for i in range(len(controls)):
-			controls[i] = read_
-		###
-		# Section to execute user code
-		###
-'''
