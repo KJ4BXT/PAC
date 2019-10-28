@@ -20,10 +20,13 @@ from math import acos, asin, atan, atan2, ceil, cos, degrees, e, exp, floor
 from math import gcd, log, log10, pow, sqrt, sin, tan, radians, pi, tau
 from datetime import datetime
 from threading import Thread
-import smbus2, busio
+import smbus2, board, busio
+import RPi.GPIO as GPIO
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
 
-#bus = smbus2.SMBus(1)
-bus = busio.I2C(board.SCL, board.SDA)#, frequency=1000000)
+bus = smbus2.SMBus(1)
+i2c = busio.I2C(board.SCL, board.SDA)#, frequency=1000000)
 
 ADDR = 0x3B #DSP addresss
 
@@ -47,13 +50,13 @@ commands = [] # This is the global variable to store the command queue
 #for btn in [button0, button1, button2, button3]:
 #	GPIO.add_event_detect(btn, GPIO.BOTH, callback=btn_ISR, bouncetime=250)
 
-adc = [ADS.ADS1115(bus,address=0x48),ADS.ADS1115(bus,address=0x49),ADS.ADS1115(bus,address=0x4A)]
-analog = [0]*len(adc)
-for i in range(len(adc)): # single ended inputs
-		analog[i*4] = AnalogIn(adc[i], ADS.P0)
-		analog[i*4+1] = AnalogIn(adc[i], ADS.P1)
-		analog[i*4+2] = AnalogIn(adc[i], ADS.P2)
-		analog[i*4+3] = AnalogIn(adc[i], ADS.P3)
+adc = [ADS.ADS1115(i2c,address=0x48),ADS.ADS1115(i2c,address=0x49),ADS.ADS1115(i2c,address=0x4A)]
+
+inputs0 = [AnalogIn(adc[0],ADS.P0),AnalogIn(adc[0],ADS.P1),AnalogIn(adc[0],ADS.P2),AnalogIn(adc[0],ADS.P3)]
+inputs1 = [AnalogIn(adc[0],ADS.P0),AnalogIn(adc[0],ADS.P1),AnalogIn(adc[0],ADS.P2),AnalogIn(adc[0],ADS.P3)]
+inputs2 = [AnalogIn(adc[0],ADS.P0),AnalogIn(adc[0],ADS.P1),AnalogIn(adc[0],ADS.P2),AnalogIn(adc[0],ADS.P3)]
+
+norm = 4.95 # ADC voltage normalization value
 
 def db_to_float(number):
 	"""Converts dB to float values"""
@@ -66,6 +69,11 @@ def float_to_db(number):
 		# raise(ValueError)
 	return(20*log10(number))
 
+
+class joystick():
+	def __init__(self):
+		self.x = 0
+		self.y = 0
 
 class DSP():
 	"""DSP class for writing to the DSP and keeping track of variable changes"""
@@ -224,7 +232,6 @@ class DSP():
 	def callback(self, value):
 		print('callback, value ',value)
 
-
 def queue(data):
 	print('queued ',data)
 	"""data should be a list, with the following format:
@@ -261,19 +268,16 @@ queue_thread = Thread(target=run_queue, daemon=True)
 queue_thread.start()
 
 def read_controls():
+	global slider, pot
 	"""Stub function to read physical control inputs"""
 	while True:
-		# Read ADC. TODO
-		for i in analog:
-			if (i
-		sleep(1)
-
-#read_control_thread = Thread(target=read_controls, daemon = True)
-#read_control_thread.start()
-
-# Yes this overwrites a class, no I don't care.
-# In fact I did it on purpose to reduce possibility of error.
-DSP = DSP()
+		for i in range(len(inputs0)): # Use ADC 0 for sliders
+			slider[i] = inputs0[i].voltage/norm
+		joystick.x = inputs1[0].voltage/norm # use ADC 1 for joystick
+		joystick.y = inputs1[1].voltage/norm
+		pot[0] = inputs2[0].voltage/norm # Use ADC 2 for rotary potentiometers
+		pot[1] = inputs2[1].voltage/norm
+		#print('read voltage',flush=True)
 
 # Ref: https://github.com/adafruit/Adafruit_CircuitPython_ADS1x15
 # Analog controls that get read: 
@@ -301,3 +305,9 @@ def btn_ISR(pin): # Triggered on rising and falling
 ReadThread = Thread(target=read_controls)
 ReadThread.daemon = True
 ReadThread.start()
+
+# Yes this overwrites a class, no I don't care.
+# In fact I did it on purpose to reduce possibility of error.
+DSP = DSP()
+
+joystick = joystick()
