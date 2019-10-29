@@ -194,7 +194,7 @@ class DSP():
 			# print("hex: ",val)
 			val = val[2:] #strip 0x prefix
 			cmd = [int(val[:2],16),int(val[2:4],16)]
-			print('set delay',val)
+			#print('set delay',val)
 			queue([ADDR,0x04,[int(0xC4+self.ind),0x00,0x00]+cmd]) # TODO proper format
 
 		def set_mute(self, status):
@@ -229,12 +229,12 @@ class DSP():
 					val = val[2:] #strip 0x prefix
 					ret = [int(val[:2],16),int(val[2:4],16),int(val[4:6],16),int(val[6:8],16)]
 					queue([ADDR,0x60,[0x00]+ret]) # value
-					print("index/address value: ")
-					print(str(0x8C+i+0x04*self.ind))
+					#print("index/address value: ")
+					#print(str(0x8C+i+0x04*self.ind))
 					queue([ADDR,0x60,[0x05,0x00,0x00,0x01]+[0x8C+i+0x04*self.ind]+[0x00,0x00,0x00,0x01]]) # location
 
-			print(self, 'set sources to ',gain_vals)
-			print(commands)
+			#print(self, 'set sources to ',gain_vals)
+			#print(commands)
 			#queue(sources) # TODO proper format
 
 
@@ -264,7 +264,7 @@ class DSP():
 		print('callback, value ',value)
 
 def queue(data):
-	print('queued ',data)
+	#print('queued ',data)
 	"""data should be a list, with the following format:
 	[i2c address, memory address, [data]]
 	data should be less than 32 bytes at a time.
@@ -282,9 +282,9 @@ def run_queue():
 		if commands:
 			#print(commands.pop(0))
 			#print('cmd: ',cmd)
-			sleep(0.01)
+			#sleep(0.01)
 			X = commands.pop(0)
-			print('X: ',X)
+			#print('X: ',X)
 			
 			try:
 				bus.write_i2c_block_data(X[0],X[1],X[2])
@@ -293,7 +293,7 @@ def run_queue():
 				print(e)
 #				print("Command: ",X)
 			#print('commands pop: ',commands.pop(0))
-			sleep(0.01)
+			#sleep(0.01)
 
 queue_thread = Thread(target=run_queue, daemon=True)
 queue_thread.start()

@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
-from control_class import DSP
+from control_class import *
 from functools import partial
 
 
@@ -73,7 +73,7 @@ E1 = Text(midframe,wrap=NONE, height = 12, width = 64)
 E1.pack(fill=BOTH, expand = True)
 
 # Sample equation 
-E1.insert(INSERT, """#Click buttons!\nDSP.output[1].mute = control.button3""")
+E1.insert(INSERT, """#Click buttons!\nDSP.output[1].sources = (0,joystick.y,0,0""")
 
 bottomframe = LabelFrame(Cframe, text=" keypad ", bd=3)
 bottomframe.pack(padx=15, pady=10)
@@ -114,5 +114,17 @@ for o in DSP.output:
 	outbuttons.append(ttk.Button(Rframe, text='\n'+o.name+'\n', command=cmd))
 	outbuttons[-1].pack(padx = 5, pady=2, fill=BOTH)#, expand=True)
 
+def runthread():
+	while True:
+		try:
+			#print(E1.get('1.0',END))
+			exec(E1.get("1.0",END))
+		except Exception as e:
+			#info_msg("invalid program. "+str(e))
+			print("invalid program")
+		sleep(0.1)
+
+cmdthread = Thread(target=runthread,daemon=True)
+cmdthread.start()
 
 root.mainloop()
