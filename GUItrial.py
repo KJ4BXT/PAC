@@ -73,7 +73,8 @@ E1 = Text(midframe,wrap=NONE, height = 12, width = 64)
 E1.pack(fill=BOTH, expand = True)
 
 # Sample equation 
-E1.insert(INSERT, """#Click buttons!\nDSP.output[1].sources = (0,joystick.y,0,0""")
+E1.insert(INSERT, """#Click buttons!\nDSP.output[0].sources = (joystick.y*2.5,0,0,0)\n
+DSP.output[1].sources = (0,joystick.y*2.5,0,0)""")
 
 bottomframe = LabelFrame(Cframe, text=" keypad ", bd=3)
 bottomframe.pack(padx=15, pady=10)
@@ -118,11 +119,11 @@ def runthread():
 	while True:
 		try:
 			#print(E1.get('1.0',END))
-			exec(E1.get("1.0",END))
+			if (len(commands) == 0):
+				exec(E1.get("1.0",END))
 		except Exception as e:
 			#info_msg("invalid program. "+str(e))
 			print("invalid program")
-		sleep(0.1)
 
 cmdthread = Thread(target=runthread,daemon=True)
 cmdthread.start()
