@@ -15,6 +15,7 @@ from datetime import datetime
 from threading import Thread
 import smbus2, board, busio
 import RPi.GPIO as GPIO
+from pyky040 import pyky040
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 
@@ -48,9 +49,31 @@ rotary = [0, 0] # rotary encoders
 
 commands = [] # This is the global variable to store the command queue
 
+rot0CLK = 0
+rot0DT = 0
+rot0SW = 0
+rot1CLK = 0
+rot1DT = 0
+rot1SW = 0
+
+encoder = [pyky040.Encoder(CLK=rot0CLK,DT=rot0DT,SW=rot0SW),pyky040.Encoder(CLK=rot1CLK,DT=rot1DT,SW=rot1SW)]
+
 # Binary inputs (toggle switches, buttons, etc.)
 # should be set up using interrupts. 
 # Need to ensure that interrupts do not interfere with writes in progress
+
+def rotary_0(pos):
+    rotary[0] = pos
+def rotary_1(pos):
+    rotary[1] = pos
+
+encoder[0].setup(scale_min=0, scale_max=1, step=0.01, chg_callback=rotary_0)
+encoder[1].setup(scale_min=0, scale_max=1, step=0.01, chg_callback=rotary_1)
+
+rotwatch0 = Thread(target=encoder[0].watch, daemon=True)
+rotwatch1 = Thread(target=encoder[1].watch, daemon=True)
+rotwatch0.start()
+rotwatch1.start()
 
 def btn_ISR(pin): # Triggered on rising and falling
 	if (buttonmode == 'momentary'):

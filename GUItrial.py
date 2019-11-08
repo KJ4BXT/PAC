@@ -100,7 +100,6 @@ for sub in btn_list:
 		# increment button index
 		n += 1
 
-
 # I/O buttons
 
 inbuttons = []
