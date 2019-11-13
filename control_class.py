@@ -49,12 +49,12 @@ rotary = [0, 0] # rotary encoders
 
 commands = [] # This is the global variable to store the command queue
 
-rot0CLK = 0
-rot0DT = 0
-rot0SW = 0
-rot1CLK = 0
-rot1DT = 0
-rot1SW = 0
+rot0CLK = 6
+rot0DT = 5
+rot0SW = 22
+rot1CLK = 27
+rot1DT = 17
+rot1SW = 4
 
 encoder = [pyky040.Encoder(CLK=rot0CLK,DT=rot0DT,SW=rot0SW),pyky040.Encoder(CLK=rot1CLK,DT=rot1DT,SW=rot1SW)]
 
