@@ -16,7 +16,7 @@ tca = [adafruit_tca9548a.TCA9548A(i2c,address=0x70),adafruit_tca9548a.TCA9548A(i
 disp = [] # Display list
 
 #Set up displays
-for i in range(14):
+for i in range(9):
 	try:
 		disp.append(adafruit_ssd1306.SSD1306_I2C(WIDTH, HEIGHT, tca[i//7][i%7], addr=0x3c))
 	except Exception as e:
@@ -67,3 +67,14 @@ def show(ind, text):
 def ID(): # Show display index on each screen
 	for i in range(len(disp)):
 		show(i,[str(i),''])
+
+def demo_disp(): # Exactly what it sounds like
+	show(0,['0','MIX A'])
+	show(1,['1','MIX B'])
+	show(2,['2','N/A'])
+	show(3,['3','beam angle'])
+	show(4,['4','X/Y pan'])
+	show(5,['5','L/R GAIN'])
+	show(6,['6','SUB GAIN'])
+	show(7,['7','stereo FX'])
+	show(8,['8','beam shape'])
