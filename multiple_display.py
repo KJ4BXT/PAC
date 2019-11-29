@@ -1,202 +1,118 @@
-# Copyright (c) 2017 Adafruit Industries
-# Author: Tony DiCola & James DeVito
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-import time
-import smbus2
 import board
-import busio
-import math
+import digitalio
+from PIL import Image, ImageDraw, ImageFont
+import adafruit_ssd1306
 import adafruit_tca9548a
+from time import sleep
 
-import Adafruit_GPIO.SPI as SPI
-import Adafruit_SSD1306
 
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
+# Define the Reset Pin
+oled_reset = digitalio.DigitalInOut(board.D4)
 
-import subprocess
+# Change these
+# to the right size for your display!
+WIDTH = 128
+HEIGHT = 64     # Change to 64 if needed
+BORDER = 5
 
-# Raspberry Pi pin configuration:
-RST = None     # on the PiOLED this pin isnt used
-# Note the following are only used with SPI:
-DC = 23
-SPI_PORT = 0
-SPI_DEVICE = 0
+# Use for I2C.
+i2c = board.I2C()
 
-# Beaglebone Black pin configuration:
-# RST = 'P9_12'
-# Note the following are only used with SPI:
-# DC = 'P9_15'
-# SPI_PORT = 1
-# SPI_DEVICE = 0
+tca = [adafruit_tca9548a.TCA9548A(i2c,address=0x70),adafruit_tca9548a.TCA9548A(i2c,address=0x71)]
+#tca0 = adafruit_tca9548a.TCA9548A(i2c,address = 0x70)
+#tca1 = adafruit_tca9548a.TCA9548A(i2c,address = 0x71)
+#tca2 = adafruit_tca9548a.TCA9548A(i2c, addr=0x72) #add this for above 13
+#tca = [tca0, tca1]
 
-bus = smbus2.SMBus(1)
+disp = []
 
-TCA_ADDR = 0x70 #mux address
-TCA_PORT_DISPLAY1 = 0 #mux port
+#for i in range(11):
+#display.append(adafruit_ssd1306.SSD1306_I2C(WIDTH, HEIGHT, tca[0], addr=0x3c, reset=oled_reset))
+#oled = adafruit_ssd1306.SSD1306_I2C(WIDTH, HEIGHT, tca[0], addr=0x3c, reset=oled_reset)
 
-def mux_select(bus,tca_port):
-    assert(0 <= tca_port <= 7)
-    bus.write_byte(TCA_ADDR, 1 << tca_port)
+for i in range(14):
+	try:
+		disp.append(adafruit_ssd1306.SSD1306_I2C(WIDTH, HEIGHT, tca[i//7][i%7], addr=0x3c, reset=oled_reset))
+		#print('tca ',i//7)
+	except Exception as e:
+		disp.append(None)
+		print('oled failed, ',i,'tca ',i//7)
 
-# 128x32 display with hardware I2C:
-#disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST)
+#tsl1 = adafruit_tsl2591.TSL2591(tca[0])
 
-# 128x64 display with hardware I2C:
-disp = Adafruit_SSD1306.SSD1306_128_64(mux_select(bus,TCA_PORT_DISPLAY1))#,rst=RST)
+# Use for SPI
+#spi = board.SPI()
+#oled_cs = digitalio.DigitalInOut(board.D5)
+#oled_dc = digitalio.DigitalInOut(board.D6)
+#oled = adafruit_ssd1306.SSD1306_SPI(WIDTH, HEIGHT, spi, oled_dc, oled_reset, oled_cs)
 
-# Note you can change the I2C address by passing an i2c_address parameter like:
-# disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C)
+def show(ind, text):
+	global disp
+	fontsize = 24 # arbitrary static
+	font = ImageFont.truetype("Calibri.ttf",fontsize) #if it does set font size appropriately using Calibri.
 
-# Alternatively you can specify an explicit I2C bus number, for example
-# with the 128x32 display you would use:
-# disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST, i2c_bus=2)
+	if (type(ind) != int):
+		raise TypeError('display selector must be an integer')
+	#Start of drawing
+	image = Image.new('1', (disp[ind].width, disp[ind].height))
+	draw = ImageDraw.Draw(image)
 
-# 128x32 display with hardware SPI:
-# disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
+	disp[ind].fill(0)
+	if (type(text) == str):
+		print('single string, top line')
+	if (type(text) == list):
+		print('multiple strings')
+		
+		for i in range(len(text)):
+			(font_width, font_height) = font.getsize(text[i])
+			draw.text((disp[x].width//2 - font_width//2, (i*2+1)*disp[x].height//4 - font_height//2),
+	          		text[i], font=font, fill=255)
 
-# 128x64 display with hardware SPI:
-# disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
+		disp[ind].image(image)
+		disp[ind].show()
 
-# Alternatively you can specify a software SPI implementation by providing
-# digital GPIO pin numbers for all the required display pins.  For example
-# on a Raspberry Pi with the 128x32 display you might use:
-# disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST, dc=DC, sclk=18, din=25, cs=22)
-
-# Initialize library.
-disp.begin()
-
-# Clear display.
-disp.clear()
-disp.display()
+i = 0
+while True:
+	x = 0
+	#x = int(input('choose display: '))
+	# Clear display.
+	disp[x].fill(0)
+#	disp[x].show()
 
 # Create blank image for drawing.
 # Make sure to create image with mode '1' for 1-bit color.
-width = disp.width
-height = disp.height
-image = Image.new('1', (width, height))
+	image = Image.new('1', (disp[x].width, disp[x].height))
 
 # Get drawing object to draw on image.
-draw = ImageDraw.Draw(image)
+	draw = ImageDraw.Draw(image)
 
-# Draw a black filled box to clear the image.
-draw.rectangle((0,0,width,height), outline=0, fill=0)
+# Draw a white background
+#draw.rectangle((0, 0, oled.width, oled.height), outline=255, fill=255)
 
-# Draw some shapes.
-# First define some constants to allow easy resizing of shapes.
-padding = -2
-top = padding
-bottom = height-padding
-# Move left to right keeping track of the current x position for drawing shapes.
-x = 0
+# Draw a smaller inner rectangle
+#draw.rectangle((BORDER, BORDER, oled.width - BORDER - 1, oled.height - BORDER - 1),
+#               outline=0, fill=0)
 
+# Load default font.
+	#font = ImageFont.load_default()
+	size = 20
+	#size = int(input('font size: '))
+	font = ImageFont.truetype("Calibri.ttf",size) #if it does set font size appropriately using Calibri.
 
-# Load Calibri font with varying size
-font = ImageFont.truetype("Calibri.ttf",autosizetext(textlist)); #need to download calibri font so use this link: https://www.fontpalace.com/font-details/Calibri/
-
-# Alternatively load a TTF font.  Make sure the .ttf font file is in the same directory as the python script!
-# Some other nice fonts to try: http://www.dafont.com/bitmap.php
-# font = ImageFont.truetype('Minecraftia.ttf', 8)
-
-while True:
-
-    # Draw a black filled box to clear the image.
-    draw.rectangle((0,0,width,height), outline=0, fill=0)
-
-    # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
-   #cmd = "hostname -I | cut -d\' \' -f1"
-   # IP = subprocess.check_output(cmd, shell = True )
-   # cmd = "top -bn1 | grep load | awk '{printf \"CPU Load: %.2f\", $(NF-2)}'"
-   # CPU = subprocess.check_output(cmd, shell = True )
-   # cmd = "free -m | awk 'NR==2{printf \"Mem: %s/%sMB %.2f%%\", $3,$2,$3*100/$2 }'"
-   # MemUsage = subprocess.check_output(cmd, shell = True )
-   # cmd = "df -h | awk '$NF==\"/\"{printf \"Disk: %d/%dGB %s\", $3,$2,$5}'"
-   # Disk = subprocess.check_output(cmd, shell = True )
-
-    # Write two lines of text.
-
-    draw.text((x, top+1),       ,  font=font, fill=255)
-    draw.text((x, top+1+fontsize),     , font=font, fill=255)
-   # if TCA_PORT_DISPLAY1:
-        #draw.text((x, top+16),    str(MemUsage.decode()),  font=font, fill=255)
-        #draw.text((x, top+25),    str(Disk.decode()),  font=font, fill=255)
-
-    # Display image.
-    disp.image(image)
-    disp.display()
-#    time.sleep(.25)
-    TCA_PORT_DISPLAY1 = int(not TCA_PORT_DISPLAY1) #mux port
-    disp = Adafruit_SSD1306.SSD1306_128_64(mux_select(bus,TCA_PORT_DISPLAY1))#,rst=RST)
+# Draw Some Text
+	text = str(i)
+	(font_width, font_height) = font.getsize(text)
+	draw.text((disp[x].width//2 - font_width//2, disp[x].height//4 - font_height//2),
+	          text, font=font, fill=255)
 
 
-#function to read list of messages and choose which OLED to display on using the display's number (dispnum) and the text to disp (text2disp)
- 
-def dispchoose(dispnum, text2disp)
-    TCA_ADDR = 0x70 + hex(math.floor(dispnum/8)) #divide the display number by 8 to find which mux chip it is addressed to
-    TCA_PORT_DISPLAY1 = dispnum%8 #use modulus of dispnum by 8 to determine the port number on the mux chip given by dnum.
-    x,y = autosizetext(text2disp)
-    numrows = len(y)
-    draw.rectangle((0,0,width,height), outline=0, fill=0)
-    if numrows == 1 # text can display on one row so display it using only one row
-        draw.text((x, top+1),y[0],  font= x, fill=255)
-    elif numrows == 2# need to display on two rows so write the text in two rows
-        draw.text((x, top+1),y[0],  font= x, fill=255)
-        draw.text((x, top+1+12),y[1],  font= x, fill=255)
-    elif numrows == 3 # need to display on three rows so write the text in three rows
-        draw.text((x, top+1),y[0],  font= x, fill=255)
-        draw.text((x, top+13),y[1],  font= x, fill=255)    
-        draw.text((x, top+25),y[2],  font= x, fill=255)
-    elif numrows == 4 # need to display on four rows so write the text in four rows
-        draw.text((x, top+1),y[0],  font= x, fill=255)
-        draw.text((x, top+13),y[1],  font= x, fill=255) 
-        draw.text((x, top+25),y[2],  font= x, fill=255)
-        draw.text((x, top+37),y[3],  font= x, fill=255)   
-    disp.image(image) #"draw" the text
-    disp.display() #display the text
-   # if dnum == 0
-   #     TCA_ADDR = 0x70;
-   # elif dnum == 1:
-   #     TCA_ADDR = 0x71;
-   # elif dnum == 2:
-   #     TCA_ADDR = 0x72;
-   # return(TCA_ADDR, TCA_PORT_DISPLAY1); # return the hex address and port for the OLED display to use. May be needed or may call autosizetext function here.
-
-def autosizetext(text) # need to change to allow for space/null characters in text string and to scroll text. Also need to consider if multi-line text has < 17 characters on its following lines.
-#    textlen = len(text);
-    for i in text:
-        textlen = len(text[i]); #determine how many characters are in the message
-        fontsize = {1:76, 2:76, 3:63, 4:47, 5:41, 6:36, 7:30, 8:27, 9:23, 10:21, 11:19, 12:17,13:15, 14:15, 15:14, 16:13, 17:12} #dictionary to help set the font size
-        if textlen <= 17: # check if text will fit on one line on the OLED.
-            font = ImageFont.truetype("Calibri.ttf",fontsize[textlen]); #if it does set font size appropriately using Calibri.
-            textl = text #the text fits on one row so no need to reformat
-        elif textlen > 17:
-            numlines = math.ceiling(textlen/17); #check how many lines are needed
-            font = ImageFont.truetype("Calibri.ttf",fontsize[17]) #set font size 12
-            if numlines == 2: # 2 lines are needed to display text
-                textl = [text[0:16],text[17:34]] #create text list of two rows
-            elif numlines == 3:
-                textl = [text[0:16],text[17:34],text[35:52]] #text list of three rows
-            elsif numlines == 4:
-                textl = [text[0:16],text[17:34],text[35:52],text[53:70]] # text list of four rows
+	text = '1234567890'
+	draw.text((0, 3*disp[x].height//4 - font_height//2),
+	          text, font=font, fill=255)
 
 
-    return(font,textl);            
-
+# Display image
+	disp[x].image(image)
+	disp[x].show()
+#	sleep(0.5)
+	i += 1
