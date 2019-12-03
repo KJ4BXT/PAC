@@ -1,9 +1,10 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter import filedialog
 from control_class import *
 from functools import partial
-
+#from threading import Thread
 
 try:
 	import RPi.GPIO as GPIO
@@ -40,19 +41,21 @@ def click(btn):
 	E1.insert(INSERT, btn)
 	root.title(s)
 
-def screenchoose(bttn):
-	#button chosen for which OLED to write to and what text to display 	
-	top1 = TopLevel()
-	top1.title("Enter Text")
-	msg1 = Message(top, text="Enter the text you want displayed:")
-	msg.pack()
-	e1 = entry(master)
-	btton = Button(top, text = "Save and Write", command = write)
-	btton.pack()
+start_file = "/home/zac/College/SuperSenior/Senior_Design/code/PAC/presets"
 
-def	write():
-	#save the text and write it to the OLED
+# Run when load presets is clicked:
+# Opens file navigator and allows user to select preset file 
+def loadPresets():
+	root.filename = filedialog.askopenfilename(initialdir=start_file, title="Select file", filetypes=(("text files","*.txt"),("all files","*.*")));
+	displayContents(root.filename)
 
+
+# Displays contents of file in GUI text box
+def displayContents(filename):
+	E1.delete('1.0',END)
+	file = open(filename)
+	file_text = file.read()
+	E1.insert(INSERT, file_text)
 
 root = Tk()
 root['bg'] = 'black'
@@ -77,7 +80,7 @@ tool_button = ttk.Button(topframe, text= "Tools", command=unfinished)
 tool_button.pack(padx=10,side='left')
 home_button = ttk.Button(topframe, text= "Home", command=unfinished)
 home_button.pack(padx=10,side='left')
-load_button = ttk.Button(topframe, text= "Load Preset", command=unfinished)
+load_button = ttk.Button(topframe, text= "Load Preset", command=loadPresets)
 load_button.pack(padx=10,side='left')
 save_button = ttk.Button(topframe, text= "Save", command=unfinished)
 save_button.pack(padx=10,side='left')
@@ -99,6 +102,7 @@ btn_list = [
 ['Q',  'W',  'E',  'R',  'T', 'Y', 'U', 'I', 'O', 'P', '[', ']'],
 ['A',  'S',  'D',  'F',  'G', 'H', 'J', 'K', 'L', ';', '"'],
 ['Z',  'X',  'C',  'V',  'B', 'N', 'M', ',', '.', '/' ]]
+
 
 n = 0 # loop counter variable
 
@@ -140,29 +144,5 @@ def runthread():
 
 cmdthread = Thread(target=runthread,daemon=True)
 cmdthread.start()
-
-
-top = TopLevel()
-top.title("Write to a screen")
-msg = Message(top, text = 'Choose a screen')
-msg.pack()
-button1 = Button(top, text = "OLED 1", command = unfinished)
-button1.pack()
-button2 = Button(top, text = "OLED 2", command = unfinished)
-button2.pack()
-button3 = Button(top, text = "OLED 3", command = unfinished)
-button3.pack()
-button4 = Button(top, text = "OLED 4", command = unfinished)
-button4.pack()
-button5 = Button(top, text = "OLED 5", command = unfinished)
-button5.pack()
-button6 = Button(top, text = "OLED 6", command = unfinished)
-button6.pack()
-button7 = Button(top, text = "OLED 7", command = unfinished)
-button7.pack()
-button8 = Button(top, text = "OLED 8", command = unfinished)
-button8.pack()
-
-
 
 root.mainloop()
