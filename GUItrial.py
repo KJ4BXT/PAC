@@ -40,6 +40,20 @@ def click(btn):
 	E1.insert(INSERT, btn)
 	root.title(s)
 
+def screenchoose(bttn):
+	#button chosen for which OLED to write to and what text to display 	
+	top1 = TopLevel()
+	top1.title("Enter Text")
+	msg1 = Message(top, text="Enter the text you want displayed:")
+	msg.pack()
+	e1 = entry(master)
+	btton = Button(top, text = "Save and Write", command = write)
+	btton.pack()
+
+def	write():
+	#save the text and write it to the OLED
+
+
 root = Tk()
 root['bg'] = 'black'
 root.geometry('800x480')
@@ -126,5 +140,29 @@ def runthread():
 
 cmdthread = Thread(target=runthread,daemon=True)
 cmdthread.start()
+
+
+top = TopLevel()
+top.title("Write to a screen")
+msg = Message(top, text = 'Choose a screen')
+msg.pack()
+button1 = Button(top, text = "OLED 1", command = unfinished)
+button1.pack()
+button2 = Button(top, text = "OLED 2", command = unfinished)
+button2.pack()
+button3 = Button(top, text = "OLED 3", command = unfinished)
+button3.pack()
+button4 = Button(top, text = "OLED 4", command = unfinished)
+button4.pack()
+button5 = Button(top, text = "OLED 5", command = unfinished)
+button5.pack()
+button6 = Button(top, text = "OLED 6", command = unfinished)
+button6.pack()
+button7 = Button(top, text = "OLED 7", command = unfinished)
+button7.pack()
+button8 = Button(top, text = "OLED 8", command = unfinished)
+button8.pack()
+
+
 
 root.mainloop()
