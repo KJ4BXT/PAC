@@ -43,6 +43,14 @@ def click(btn):
 
 start_file = "/home/zac/College/SuperSenior/Senior_Design/code/PAC/presets"
 
+
+def buttonDisable():
+	button.config(state='disabled')
+
+def openDirectory():
+	root.directory = filedialog.askdirectory()
+        displayContents(root.directory)
+
 # Run when load presets is clicked:
 # Opens file navigator and allows user to select preset file 
 def loadPresets():
@@ -80,13 +88,13 @@ topframe.pack(padx=15, pady=10)
 midframe = LabelFrame(Cframe, text = " Code entry ", bd=3)
 midframe.pack(padx=15, pady=10)
 
-tool_button = ttk.Button(topframe, text= "Tools", command=unfinished)
+tool_button = ttk.Button(topframe, text= "Button Disable", command=buttonDisable)
 tool_button.pack(padx=10,side='left')
-home_button = ttk.Button(topframe, text= "Home", command=unfinished)
+home_button = ttk.Button(topframe, text= "Open Directory", command=openDirectory)
 home_button.pack(padx=10,side='left')
-load_button = ttk.Button(topframe, text= "Load Preset", command=loadPresets)
+load_button = ttk.Button(topframe, text= "Load File", command=loadPresets)
 load_button.pack(padx=10,side='left')
-save_button = ttk.Button(topframe, text= "Save", command=saveFile)
+save_button = ttk.Button(topframe, text= "Save File", command=saveFile)
 save_button.pack(padx=10,side='left')
 
 
