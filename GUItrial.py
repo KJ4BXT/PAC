@@ -45,7 +45,7 @@ start_file = "/home/zac/College/SuperSenior/Senior_Design/code/PAC/presets"
 
 
 def buttonDisable():
-	button.config(state='disabled')
+	text_widget.config(state='disabled')
 
 def saveFile():
 	root.filename =  filedialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")));
