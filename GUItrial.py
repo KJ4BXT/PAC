@@ -82,7 +82,7 @@ home_button = ttk.Button(topframe, text= "Home", command=unfinished)
 home_button.pack(padx=10,side='left')
 load_button = ttk.Button(topframe, text= "Load Preset", command=loadPresets)
 load_button.pack(padx=10,side='left')
-save_button = ttk.Button(topframe, text= "Save", command=unfinished)
+save_button = ttk.Button(topframe, text= "Save", command=saveFile)
 save_button.pack(padx=10,side='left')
 
 
