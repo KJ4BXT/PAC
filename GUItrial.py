@@ -48,6 +48,10 @@ start_file = "/home/zac/College/SuperSenior/Senior_Design/code/PAC/presets"
 def loadPresets():
 	root.filename = filedialog.askopenfilename(initialdir=start_file, title="Select file", filetypes=(("text files","*.txt"),("all files","*.*")));
 	displayContents(root.filename)
+	
+def saveFile():
+	root.filename =  filedialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
+        displayContents(root.filename)
 
 
 # Displays contents of file in GUI text box
